@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="AppleSwitch">
+        <attr name="as_switchBackgroundColor" format="color" />
+        <attr name="as_switchCursorColor" format="color" />
+        <attr name="as_checkedTextColor" format="color" />
+        <attr name="as_uncheckedTextColor" format="color" />
+        <attr name="as_leftText" format="string" />
+        <attr name="as_rightText" format="string" />
+    </declare-styleable>
+</resources>
