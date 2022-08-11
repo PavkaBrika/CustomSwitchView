@@ -1,27 +1,26 @@
 package com.breckneck.customswitchview.ui
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
+import android.os.Parcel
+import android.os.Parcelable
 import android.util.AttributeSet
 import android.util.Log
-import android.view.animation.LinearInterpolator
+import android.view.View
 import androidx.annotation.ColorInt
-import androidx.appcompat.widget.SwitchCompat
-import androidx.core.animation.doOnRepeat
 import androidx.core.graphics.toRectF
 import com.breckneck.customswitchview.R
 import com.breckneck.customswitchview.extention.dpToPx
-import kotlin.math.max
+import kotlin.concurrent.thread
 
 class AppleSwitch @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : SwitchCompat(context, attrs, defStyleAttr) {
+) : View(context, attrs, defStyleAttr) {
 
     companion object {
         private const val DEFAULT_SWITCH_BACKGROUND_COLOR = Color.GRAY
@@ -41,7 +40,7 @@ class AppleSwitch @JvmOverloads constructor(
     private var uncheckedTextColor: Int = DEFAULT_UNCHECKED_TEXT_COLOR
     private var leftText: String = "left"
     private var rightText: String = "right"
-    private var isEnable = true
+    private var isSwitchEnabled = true
 
     private val switchBackgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val switchCursorPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -51,7 +50,7 @@ class AppleSwitch @JvmOverloads constructor(
     private val leftRect = Rect()
     private val rightRect = Rect()
     private val switchRect = Rect()
-    private var size = 0
+    private var x = 1
 
     init {
         if (attrs != null) {
@@ -63,14 +62,13 @@ class AppleSwitch @JvmOverloads constructor(
             leftText = ta.getString(R.styleable.AppleSwitch_as_leftText) ?: "left"
             rightText = ta.getString(R.styleable.AppleSwitch_as_rightText) ?: "right"
             ta.recycle()
-            textOn = "on"
-            textOff = "off"
+
         }
 
         setOnClickListener {
             Log.e("TAG", "CLICKED")
             handleClick()
-            invalidate()
+//            invalidate()
         }
     }
 
@@ -106,17 +104,27 @@ class AppleSwitch @JvmOverloads constructor(
     }
 
     override fun onDraw(canvas: Canvas?) {
-        super.onDraw(canvas)
-        Log.e("TAG", "onDraw")
+//        super.onDraw(canvas)
         drawBody(canvas = canvas!!)
         drawText(canvas = canvas)
         invalidate()
-//        setOnClickListener {
-//            Log.e("TAG", "CLICKED")
-//            handleClick(canvas = canvas)
-//            invalidate()
-//        }
+    }
 
+    override fun onSaveInstanceState(): Parcelable {
+        Log.e("TAG", "onSaveInstanceState $id")
+        val savedState = SavedState(super.onSaveInstanceState())
+        savedState.isSwitchEnabled = isSwitchEnabled
+        return savedState
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable) {
+        Log.e("TAG", "onRestoreInstanceState $id")
+        if (state is SavedState) {
+            super.onRestoreInstanceState(state)
+            isSwitchEnabled = state.isSwitchEnabled
+        } else {
+            super.onRestoreInstanceState(state)
+        }
     }
 
     private fun drawText(canvas: Canvas?) {
@@ -139,15 +147,11 @@ class AppleSwitch @JvmOverloads constructor(
         switchBackgroundPaint.color = switchBackgroundColor
         switchCursorPaint.color = switchCursorColor
         canvas!!.drawRoundRect(bodyRect.toRectF(), 50F, 50F, switchBackgroundPaint)
-        if (isEnable) {
-            switchCursorPaint.color = switchCursorColor
+        if (isSwitchEnabled) {
             canvas.drawRoundRect(leftRect.toRectF(), 50F, 50F, switchCursorPaint)
         } else {
-            switchCursorPaint.color = Color.RED
             canvas.drawRoundRect(rightRect.toRectF(), 50F, 50F, switchCursorPaint)
         }
-//        switchCursorPaint.color = Color.RED
-//        canvas.drawRoundRect(rightRect.toRectF(), 50F, 50F, switchCursorPaint)
     }
 
     private fun resolveDefaultSize(spec: Int): Int {
@@ -160,19 +164,38 @@ class AppleSwitch @JvmOverloads constructor(
     }
 
     private fun handleClick() {
-        isEnable = !isEnable
-//        if (isEnable) {
-//            switchCursorPaint.color = switchCursorColor
-//            canvas!!.drawRoundRect(leftRect.toRectF(), 50F, 50F, switchCursorPaint)
-//        } else {
-//            switchCursorPaint.color = Color.RED
-//            canvas!!.drawRoundRect(rightRect.toRectF(), 50F, 50F, switchCursorPaint)
-//        }
-        Log.e("TAG", isEnable.toString())
+        isSwitchEnabled = !isSwitchEnabled
+        Log.e("TAG", isSwitchEnabled.toString())
     }
 
-    private fun toggleMode() {
+    private class SavedState : Parcelable, BaseSavedState {
+        var isSwitchEnabled: Boolean = true
 
+        constructor(superState: Parcelable?) : super(superState)
+
+        constructor(parcel: Parcel) : super(parcel) {
+            //restore state form parcel
+            isSwitchEnabled = parcel.readInt() == 1
+        }
+
+        override fun describeContents(): Int {
+            TODO("Not yet implemented")
+        }
+
+        override fun writeToParcel(out: Parcel, flags: Int) {
+            //write state to parcel
+            super.writeToParcel(out, flags)
+            out.writeInt(if (isSwitchEnabled) 1 else 0)
+        }
+
+        companion object CREATOR : Parcelable.Creator<SavedState> {
+            override fun createFromParcel(parcel: Parcel): SavedState {
+                return SavedState(parcel)
+            }
+
+            override fun newArray(size: Int): Array<SavedState?> {
+                return arrayOfNulls(size)
+            }
+        }
     }
-
 }

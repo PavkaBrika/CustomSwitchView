@@ -10,13 +10,8 @@
     android:background="@color/purple_200">
 
     <com.breckneck.customswitchview.ui.AppleSwitch
-        android:id="@+id/customSwitch"
+        android:id="@+id/apple"
         android:layout_width="250dp"
-        android:layout_height="250dp" />
-
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/defaultSwitch"
-        android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
 </LinearLayout>
